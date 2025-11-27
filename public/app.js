@@ -3,7 +3,7 @@
 // Grupo 2 - ITLA Virtual
 // ============================================
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://test-deploy-render-3y31.onrender.com/api';
 
 // Estado de la aplicación
 let currentUser = null;
