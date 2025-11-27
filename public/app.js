@@ -3,7 +3,9 @@
 // Grupo 2 - ITLA Virtual
 // ============================================
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// *** IMPORTANTE ***
+// Cambia esta URL si el backend en Render tiene otro nombre
+const API_BASE_URL = 'https://test-deploy-render-3y31.onrender.com/api';
 
 // Estado de la aplicación
 let currentUser = null;
@@ -28,7 +30,10 @@ const filterPriority = document.getElementById('filterPriority');
 const filterStatus = document.getElementById('filterStatus');
 const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
+// ============================================
 // Inicialización
+// ============================================
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     setupEventListeners();
@@ -65,7 +70,6 @@ function setupEventListeners() {
     logoutBtn.addEventListener('click', handleLogout);
 
     // Tareas
-    newTaskBtn.addEventListener('submit', () => openTaskModal());
     newTaskBtn.addEventListener('click', () => openTaskModal());
     taskForm.addEventListener('submit', handleTaskSubmit);
     document.querySelector('.close').addEventListener('click', closeTaskModal);
@@ -78,30 +82,27 @@ function setupEventListeners() {
 
     // Cerrar modal al hacer clic fuera
     taskModal.addEventListener('click', (e) => {
-        if (e.target === taskModal) {
-            closeTaskModal();
-        }
+        if (e.target === taskModal) closeTaskModal();
     });
 }
+
+// ============================================
+// Lógica de autenticación
+// ============================================
 
 // Cambiar tab de autenticación
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.dataset.tab === tab) {
-            btn.classList.add('active');
-        }
+        if (btn.dataset.tab === tab) btn.classList.add('active');
     });
 
     document.querySelectorAll('.auth-form').forEach(form => {
         form.classList.remove('active');
     });
 
-    if (tab === 'login') {
-        loginForm.classList.add('active');
-    } else {
-        registerForm.classList.add('active');
-    }
+    if (tab === 'login') loginForm.classList.add('active');
+    else registerForm.classList.add('active');
 }
 
 // Manejar login
@@ -117,9 +118,7 @@ async function handleLogin(e) {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
@@ -128,8 +127,10 @@ async function handleLogin(e) {
         if (response.ok) {
             authToken = data.token;
             currentUser = data.user;
+
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
             showTasksSection();
             loadTasks();
             loginForm.reset();
@@ -158,9 +159,7 @@ async function handleRegister(e) {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, email, password })
         });
 
@@ -169,27 +168,25 @@ async function handleRegister(e) {
         if (response.ok) {
             authToken = data.token;
             currentUser = data.user;
+
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
             showTasksSection();
             loadTasks();
             registerForm.reset();
         } else {
-            if (data.errors) {
-                errorDiv.textContent = data.errors.map(e => e.msg).join(', ');
-            } else {
-                errorDiv.textContent = data.error || 'Error al registrarse';
-            }
+            errorDiv.textContent = data.error || 'Error al registrarse';
             errorDiv.classList.add('show');
         }
     } catch (error) {
-        errorDiv.textContent = 'Error de conexión. Verifica que el servidor esté corriendo.';
+        errorDiv.textContent = 'Error de conexión.';
         errorDiv.classList.add('show');
         console.error('Error:', error);
     }
 }
 
-// Manejar logout
+// Logout
 function handleLogout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
@@ -199,14 +196,13 @@ function handleLogout() {
     showAuthSection();
 }
 
-// Mostrar sección de autenticación
+// Mostrar secciones
 function showAuthSection() {
     authSection.style.display = 'flex';
     tasksSection.style.display = 'none';
     userInfo.style.display = 'none';
 }
 
-// Mostrar sección de tareas
 function showTasksSection() {
     authSection.style.display = 'none';
     tasksSection.style.display = 'block';
@@ -214,13 +210,15 @@ function showTasksSection() {
     userName.textContent = currentUser.nombre;
 }
 
+// ============================================
+// Tareas
+// ============================================
+
 // Cargar tareas
 async function loadTasks() {
     try {
         const response = await fetch(`${API_BASE_URL}/tareas`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+            headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
         if (response.ok) {
@@ -245,8 +243,7 @@ function renderTasks() {
         tasksList.style.display = 'grid';
         emptyState.style.display = 'none';
         tasksList.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
-        
-        // Agregar event listeners a los botones
+
         document.querySelectorAll('.edit-task-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const taskId = parseInt(e.target.dataset.taskId);
@@ -270,37 +267,21 @@ function getFilteredTasks() {
     const priorityFilter = filterPriority.value;
     const statusFilter = filterStatus.value;
 
-    if (priorityFilter) {
-        filtered = filtered.filter(task => task.prioridad === priorityFilter);
-    }
-
-    if (statusFilter) {
-        filtered = filtered.filter(task => task.estado === statusFilter);
-    }
+    if (priorityFilter) filtered = filtered.filter(t => t.prioridad === priorityFilter);
+    if (statusFilter) filtered = filtered.filter(t => t.estado === statusFilter);
 
     return filtered;
 }
 
-// Aplicar filtros
-function applyFilters() {
-    renderTasks();
-}
-
-// Limpiar filtros
-function clearFilters() {
-    filterPriority.value = '';
-    filterStatus.value = '';
-    renderTasks();
-}
-
-// Crear tarjeta de tarea
+// Crear tarjeta
 function createTaskCard(task) {
-    const dueDate = task.fecha_vencimiento 
+    const dueDate = task.fecha_vencimiento
         ? new Date(task.fecha_vencimiento).toLocaleDateString('es-ES')
         : 'Sin fecha';
-    
-    const isOverdue = task.fecha_vencimiento && 
-        new Date(task.fecha_vencimiento) < new Date() && 
+
+    const isOverdue =
+        task.fecha_vencimiento &&
+        new Date(task.fecha_vencimiento) < new Date() &&
         task.estado !== 'completada';
 
     return `
@@ -312,11 +293,9 @@ function createTaskCard(task) {
             <div class="task-meta">
                 <span class="task-badge badge-priority ${task.prioridad}">Prioridad: ${task.prioridad.toUpperCase()}</span>
                 <span class="task-badge badge-status ${task.estado}">${getStatusLabel(task.estado)}</span>
-                ${isOverdue ? '<span class="task-badge" style="background-color: #fee2e2; color: #991b1b;">Vencida</span>' : ''}
+                ${isOverdue ? '<span class="task-badge" style="background:#fee2e2;color:#991b1b;">Vencida</span>' : ''}
             </div>
-            <div class="task-date">
-                📅 Vence: ${dueDate}
-            </div>
+            <div class="task-date">📅 Vence: ${dueDate}</div>
             <div class="task-actions">
                 <button class="btn btn-primary btn-sm edit-task-btn" data-task-id="${task.id}">Editar</button>
                 <button class="btn btn-danger btn-sm delete-task-btn" data-task-id="${task.id}">Eliminar</button>
@@ -325,7 +304,6 @@ function createTaskCard(task) {
     `;
 }
 
-// Obtener etiqueta de estado
 function getStatusLabel(estado) {
     const labels = {
         'pendiente': 'Pendiente',
@@ -335,7 +313,7 @@ function getStatusLabel(estado) {
     return labels[estado] || estado;
 }
 
-// Abrir modal de tarea
+// Modal de tareas
 function openTaskModal(taskId = null) {
     editingTaskId = taskId;
     const modalTitle = document.getElementById('modalTitle');
@@ -363,14 +341,13 @@ function openTaskModal(taskId = null) {
     taskModal.classList.add('show');
 }
 
-// Cerrar modal de tarea
 function closeTaskModal() {
     taskModal.classList.remove('show');
     taskForm.reset();
     editingTaskId = null;
 }
 
-// Manejar envío de formulario de tarea
+// Guardar tarea (crear / editar)
 async function handleTaskSubmit(e) {
     e.preventDefault();
     const errorDiv = document.getElementById('taskError');
@@ -386,10 +363,10 @@ async function handleTaskSubmit(e) {
     };
 
     try {
-        const url = editingTaskId 
+        const url = editingTaskId
             ? `${API_BASE_URL}/tareas/${editingTaskId}`
             : `${API_BASE_URL}/tareas`;
-        
+
         const method = editingTaskId ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -407,11 +384,7 @@ async function handleTaskSubmit(e) {
             closeTaskModal();
             loadTasks();
         } else {
-            if (data.errors) {
-                errorDiv.textContent = data.errors.map(e => e.msg).join(', ');
-            } else {
-                errorDiv.textContent = data.error || 'Error al guardar la tarea';
-            }
+            errorDiv.textContent = data.error || 'Error al guardar la tarea';
             errorDiv.classList.add('show');
         }
     } catch (error) {
@@ -423,16 +396,12 @@ async function handleTaskSubmit(e) {
 
 // Eliminar tarea
 async function deleteTask(taskId) {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
-        return;
-    }
+    if (!confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/tareas/${taskId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+            headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
         if (response.ok) {
@@ -447,10 +416,9 @@ async function deleteTask(taskId) {
     }
 }
 
-// Escapar HTML para prevenir XSS
+// Escapar HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
-
