@@ -1,5 +1,5 @@
 {
-  "name": "administrar tareas",
+  "name": "administrar-tareas",
   "version": "1.0.0",
   "description": "app web de gestión de tareas - Grupo 2",
   "main": "server.js",
@@ -12,7 +12,7 @@
     "web-app",
     "rest-api"
   ],
-  "author": "Grupo 2 ",
+  "author": "Grupo 2",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
@@ -27,4 +27,3 @@
     "nodemon": "^3.0.2"
   }
 }
-
